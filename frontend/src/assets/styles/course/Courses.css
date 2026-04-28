@@ -811,3 +811,60 @@
     min-height: 140px;
     resize: vertical;
 }
+
+/* ── Mobile Responsiveness ────────────────────────────────── */
+@media (max-width: 768px) {
+    .discovery-navbar {
+        height: auto;
+        padding: 16px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .nav-center {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+    }
+
+    .nav-search {
+        width: 100%;
+        margin-top: 8px;
+    }
+
+    .nav-user {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .discovery-main-top {
+        padding: 24px 16px;
+    }
+
+    .discovery-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .discovery-header-info h1 {
+        font-size: 2rem;
+    }
+
+    .course-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .course-details-card {
+        padding: 24px;
+    }
+
+    .course-details-hero {
+        height: 250px;
+    }
+
+    .course-form-card {
+        padding: 24px;
+        margin: 20px 16px;
+    }
+}

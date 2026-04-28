@@ -131,3 +131,17 @@
 .switch-link button:hover {
     text-decoration: underline;
 }
+
+/* ── Mobile Responsiveness ────────────────────────────────── */
+@media (max-width: 768px) {
+    .auth-card {
+        padding: 24px 20px;
+        box-shadow: none;
+        border: none;
+        background: transparent;
+    }
+
+    .auth-container {
+        padding: 16px;
+    }
+}
