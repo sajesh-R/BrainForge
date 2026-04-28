@@ -120,7 +120,7 @@ const ChatWindow = ({ courseId: propCourseId }) => {
                                                 {msg.filePath && (
                                                     <div className="message-file">
                                                         <a
-                                                            href={`http://localhost:5001${msg.filePath}`}
+                                                            href={`${(process.env.REACT_APP_API_URL || 'http://localhost:5001/api').replace('/api', '')}${msg.filePath}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             style={{ color: isSent ? '#fff' : '#A855F7', fontWeight: 700 }}
