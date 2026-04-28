@@ -1,0 +1,228 @@
+.reports-container {
+    padding: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.reports-header {
+    margin-bottom: 50px;
+}
+
+.reports-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+/* Premium Card Style for Light/Neutral Background */
+.report-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 28px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.report-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 60px rgba(168, 85, 247, 0.12);
+    border-color: rgba(168, 85, 247, 0.2);
+}
+
+.report-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: #F5F3FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+}
+
+.report-card:hover .report-icon-wrapper {
+    background: var(--gradient);
+}
+
+.report-icon-wrapper i {
+    font-size: 1.5rem;
+    color: #A855F7;
+    transition: color 0.3s ease;
+}
+
+.report-card:hover .report-icon-wrapper i {
+    color: white;
+}
+
+.report-title {
+    color: #1f2937;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.report-date {
+    color: #6b7280;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 30px;
+}
+
+.report-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.report-btn {
+    padding: 12px 20px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.report-btn-view {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.report-btn-view:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+.report-btn-download {
+    background: var(--gradient);
+    color: white;
+    flex-grow: 1;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.2);
+}
+
+.report-btn-download:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.3);
+}
+
+/* Modal Styles */
+.report-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.report-modal-content {
+    background: #ffffff;
+    padding: 50px;
+    border-radius: 36px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.close-modal {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: #f3f4f6;
+    border: none;
+    color: #6b7280;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.4rem;
+    transition: all 0.2s ease;
+}
+
+.close-modal:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.report-detail-info {
+    background: #f9fafb;
+    border-radius: 24px;
+    padding: 30px;
+    margin: 30px 0;
+    border: 1px solid #f3f4f6;
+}
+
+.detail-row {
+    margin-bottom: 24px;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.detail-value {
+    color: #111827;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.detail-status {
+    color: #10B981;
+}
