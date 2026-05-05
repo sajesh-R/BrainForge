@@ -26,5 +26,29 @@ exports.markAsRead = async (req, res) => {
     }
 };
 
+// @desc    Subscribe to push notifications
+// @route   POST /api/notifications/subscribe
+// @access  Private
+exports.subscribe = async (req, res) => {
+    try {
+        const subscription = req.body;
+        const User = require('../../models/auth/User');
+        const user = await User.findById(req.user._id);
+
+        if (!user.pushSubscriptions.find(s => s.endpoint === subscription.endpoint)) {
+            user.pushSubscriptions.push(subscription);
+            await user.save();
+        }
+
+        res.status(201).json({ message: 'Subscribed successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Internal helper for other services
-exports.createNotification = notificationService.createNotification;
+exports.createNotification = (userId, title, message, type, url) => {
+    return notificationService.createNotification(userId, title, message, type, url);
+};
+
+

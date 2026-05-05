@@ -7,7 +7,8 @@ import Dashboard from './pages/dashboard/Dashboard';
 import CourseList from './pages/courses/CourseList';
 import CourseDetails from './pages/courses/CourseDetails';
 import CreateCourse from './pages/courses/CreateCourse';
-import ChatWindow from './pages/chat/ChatWindow';
+
+import DirectChat from './pages/chat/DirectChat';
 import AssignmentsPage from './pages/assignments/AssignmentsPage';
 import SmartDashboard from './pages/smart/SmartDashboard';
 import ReportsPage from './pages/reports/ReportsPage';
@@ -50,12 +51,6 @@ const AppContent = () => {
           </PrivateRoute>
         } />
 
-        <Route path="/courses/:id/chat" element={
-          <PrivateRoute>
-            <ChatWindow />
-          </PrivateRoute>
-        } />
-
         <Route path="/courses/:id/assignments" element={
           <PrivateRoute>
             <AssignmentsPage />
@@ -65,6 +60,12 @@ const AppContent = () => {
         <Route path="/smart" element={
           <PrivateRoute>
             <SmartDashboard />
+          </PrivateRoute>
+        } />
+
+        <Route path="/chat" element={
+          <PrivateRoute>
+            <DirectChat />
           </PrivateRoute>
         } />
 

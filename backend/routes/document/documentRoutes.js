@@ -5,7 +5,8 @@ const {
     getDocumentsByCourse,
     getDocumentById,
 } = require('../../controllers/document/documentController');
-const upload = require('../../middleware/uploadMiddleware');
+const { upload } = require('../../middleware/uploadMiddleware');
+
 
 const { protect } = require('../../middleware/authMiddleware');
 

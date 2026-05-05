@@ -3,16 +3,26 @@ const mongoose = require('mongoose');
 const MessageSchema = new mongoose.Schema({
     content: {
         type: String,
-        required: true
+        default: ''
     },
     filePath: {
         type: String,
         default: null
     },
-    course: {
+    receiver: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course',
-        required: true
+        ref: 'User',
+        required: false
+    },
+    chatSession: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ChatSession',
+        required: false
+    },
+    group: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ChatGroup',
+        required: false
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,

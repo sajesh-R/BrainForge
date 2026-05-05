@@ -41,7 +41,7 @@ const CourseDetails = () => {
         setEnrolling(true);
         setError('');
         try {
-            await enrollInCourse({ courseId: id });
+            await enrollInCourse(id);
             setSuccess('Successfully enrolled!');
             setIsEnrolled(true);
         } catch (err) {
@@ -82,6 +82,28 @@ const CourseDetails = () => {
                             </p>
                         </div>
 
+                        {course.videoUrl && (
+                            <div className="course-video-container" style={{ marginTop: '40px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+                                <h2 style={{ fontSize: '1.8rem', color: '#111827', marginBottom: '24px' }}>Course Preview</h2>
+                                {course.videoUrl.includes('youtube.com') || course.videoUrl.includes('youtu.be') ? (
+                                    <iframe
+                                        width="100%"
+                                        height="450"
+                                        src={`https://www.youtube.com/embed/${course.videoUrl.split('v=')[1] || course.videoUrl.split('/').pop()}`}
+                                        title="Course Video"
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    ></iframe>
+                                ) : (
+                                    <video controls width="100%" style={{ borderRadius: '16px' }}>
+                                        <source src={course.videoUrl} type="video/mp4" />
+                                        Your browser does not support the video tag.
+                                    </video>
+                                )}
+                            </div>
+                        )}
+
                         <div style={{ marginTop: '48px' }}>
                             <DocumentModule courseId={id} />
                         </div>
@@ -118,9 +140,6 @@ const CourseDetails = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 <button className="btn-secondary" onClick={() => navigate(`/courses/${id}/assignments`)} style={{ marginTop: 0 }}>
                                     📝 View Assignments
-                                </button>
-                                <button className="btn-secondary" onClick={() => navigate(`/courses/${id}/chat`)} style={{ marginTop: 0 }}>
-                                    💬 Live Course Chat
                                 </button>
                             </div>
                         </div>

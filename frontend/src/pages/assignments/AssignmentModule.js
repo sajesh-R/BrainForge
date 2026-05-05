@@ -95,7 +95,9 @@ const AssignmentModule = ({ courseId }) => {
             const newFiles = { ...submissionFiles };
             delete newFiles[assignmentId];
             setSubmissionFiles(newFiles);
+            fetchAssignments(); // Refresh to show "View My Submission"
         } catch (error) {
+
             alert(error.response?.data?.message || 'Submission failed');
         } finally {
             setSubmittingId(null);
@@ -127,28 +129,43 @@ const AssignmentModule = ({ courseId }) => {
 
                             {user && user.role === 'Student' && (
                                 <div className="submission-section">
-                                    <form className="submission-form" onSubmit={(e) => handleSubmitAssignment(e, assignment._id)}>
-                                        <div className="file-input-wrapper">
-                                            <input
-                                                type="file"
-                                                id={`file-${assignment._id}`}
-                                                className="file-input"
-                                                onChange={(e) => handleFileChange(e, assignment._id)}
-                                            />
-                                            <label htmlFor={`file-${assignment._id}`} className="file-label">
-                                                {submissionFiles[assignment._id] ? submissionFiles[assignment._id].name : 'Select submission file...'}
-                                            </label>
+                                    {assignment.isSubmitted ? (
+                                        <div className="submitted-status">
+                                            <div className="status-badge">
+                                                <i className="fas fa-check-circle"></i> Submitted
+                                            </div>
+                                            <button 
+                                                className="btn-view-submission"
+                                                onClick={() => downloadSubmission(assignment.submission._id)}
+                                            >
+                                                <i className="fas fa-file-download"></i> View My Submission
+                                            </button>
                                         </div>
-                                        <button
-                                            type="submit"
-                                            className="submit-btn"
-                                            disabled={submittingId === assignment._id}
-                                        >
-                                            {submittingId === assignment._id ? 'Submitting...' : 'Submit'}
-                                        </button>
-                                    </form>
+                                    ) : (
+                                        <form className="submission-form" onSubmit={(e) => handleSubmitAssignment(e, assignment._id)}>
+                                            <div className="file-input-wrapper">
+                                                <input
+                                                    type="file"
+                                                    id={`file-${assignment._id}`}
+                                                    className="file-input"
+                                                    onChange={(e) => handleFileChange(e, assignment._id)}
+                                                />
+                                                <label htmlFor={`file-${assignment._id}`} className="file-label">
+                                                    {submissionFiles[assignment._id] ? submissionFiles[assignment._id].name : 'Select submission file...'}
+                                                </label>
+                                            </div>
+                                            <button
+                                                type="submit"
+                                                className="submit-btn"
+                                                disabled={submittingId === assignment._id}
+                                            >
+                                                {submittingId === assignment._id ? 'Submitting...' : 'Submit'}
+                                            </button>
+                                        </form>
+                                    )}
                                 </div>
                             )}
+
 
                             {user && user.role === 'Admin' && (
                                 <div className="admin-actions" style={{ marginTop: '1rem' }}>

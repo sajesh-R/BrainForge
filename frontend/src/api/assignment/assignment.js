@@ -24,15 +24,10 @@ export const getSubmissionsForAssignment = async (assignmentId) => {
     return response.data;
 };
 
-export const downloadSubmission = async (submissionId, fileName) => {
-    const response = await apiClient.get(`/assignments/submission/${submissionId}/download`, {
-        responseType: 'blob',
-    });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+export const downloadSubmission = (submissionId) => {
+    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+    const token = localStorage.getItem('token');
+    window.open(`${baseUrl}/assignments/submission/${submissionId}/download?token=${token}`, '_blank');
 };
+
+

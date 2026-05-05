@@ -4,13 +4,28 @@ const SmartFeaturesService = require('../smart/smartFeaturesService');
 const notificationController = require('../../controllers/notification/notificationController');
 
 exports.createNewCourse = async (courseData) => {
-    const { title, description, instructorId } = courseData;
+    const { title, description, instructorId, videoUrl } = courseData;
 
     const course = await Course.create({
         title,
         description,
         instructor: instructorId,
+        videoUrl: videoUrl || '',
     });
+
+    return course;
+};
+
+exports.updateCourseVideo = async (courseId, videoUrl) => {
+    const course = await Course.findByIdAndUpdate(
+        courseId,
+        { videoUrl },
+        { new: true, runValidators: true }
+    );
+
+    if (!course) {
+        throw new Error('Course not found');
+    }
 
     return course;
 };
@@ -51,8 +66,10 @@ exports.enrollUserInCourse = async (userId, courseId) => {
         userId,
         'Welcome to the Course!',
         `You have successfully enrolled in ${course.title}. Happy learning!`,
-        'SUCCESS'
+        'SUCCESS',
+        `/courses/${courseId}`
     );
+
 
     return enrollment;
 };
@@ -60,3 +77,9 @@ exports.enrollUserInCourse = async (userId, courseId) => {
 exports.fetchUserEnrollments = async (userId) => {
     return await Enrollment.find({ user: userId }).populate('course');
 };
+
+exports.fetchCourseEnrolledUsers = async (courseId) => {
+    const enrollments = await Enrollment.find({ course: courseId }).select('user');
+    return enrollments.map(e => e.user);
+};
+

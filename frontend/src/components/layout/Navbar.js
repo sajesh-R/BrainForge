@@ -26,6 +26,7 @@ const Navbar = () => {
                         <li><Link to="/dashboard" className={isActive('/dashboard')}>Dashboard</Link></li>
                         <li><Link to="/courses" className={isActive('/courses')}>Courses</Link></li>
                         <li><Link to="/smart" className={isActive('/smart')}>AI Hub</Link></li>
+                        <li><Link to="/chat" className={isActive('/chat')}>Messages</Link></li>
                         <li><Link to="/reports" className={isActive('/reports')}>Reports</Link></li>
                         <li><button onClick={handleLogout} className="btn-logout-nav">Logout</button></li>
                     </>

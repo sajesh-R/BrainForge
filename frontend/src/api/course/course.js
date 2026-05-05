@@ -15,7 +15,17 @@ export const getCourseById = async (id) => {
     return response.data;
 };
 
-export const enrollInCourse = async (enrollmentData) => {
-    const response = await apiClient.post('/courses/enroll', enrollmentData);
+export const enrollInCourse = async (courseId) => {
+    const response = await apiClient.post('/courses/enroll', { courseId });
+    return response.data;
+};
+
+export const getEnrolledCourses = async () => {
+    const response = await apiClient.get('/courses/enrolled');
+    return response.data;
+};
+
+export const addCourseVideo = async (courseId, videoUrl) => {
+    const response = await apiClient.put(`/courses/${courseId}/video`, { videoUrl });
     return response.data;
 };

@@ -1,4 +1,6 @@
 const courseService = require('../../services/course/courseService');
+const notificationController = require('../notification/notificationController');
+const User = require('../../models/auth/User');
 
 // @desc    Create a new course
 // @route   POST /api/courses
@@ -13,11 +15,34 @@ exports.createCourse = async (req, res) => {
 
         const course = await courseService.createNewCourse(req.body);
 
+        // Notify all users about the new course
+        try {
+            const users = await User.find({}).select('_id');
+            console.log(`[DEBUG] New Course: Notifying ${users.length} users about ${title}`);
+            
+            for (const user of users) {
+                // Don't notify the instructor who created it
+                if (user._id.toString() !== instructorId.toString()) {
+                    await notificationController.createNotification(
+                        user._id,
+                        'New Course Launched!',
+                        `Check out our new course: "${title}". Start learning today!`,
+                        'INFO',
+                        `/courses/${course._id}`
+                    );
+
+                }
+            }
+        } catch (pushError) {
+            console.error('Failed to send new course push notifications:', pushError);
+        }
+
         res.status(201).json({
             success: true,
             message: 'Course created successfully',
             data: course,
         });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -107,5 +132,29 @@ exports.getEnrolledCourses = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Add/Update course video
+// @route   PUT /api/courses/:id/video
+// @access  Private (Admin/Instructor)
+exports.addCourseVideo = async (req, res) => {
+    try {
+        const { videoUrl } = req.body;
+        const courseId = req.params.id;
+
+        if (!videoUrl) {
+            return res.status(400).json({ message: 'Please provide a video URL' });
+        }
+
+        const course = await courseService.updateCourseVideo(courseId, videoUrl);
+
+        res.status(200).json({
+            success: true,
+            message: 'Video added to course successfully',
+            data: course,
+        });
+    } catch (error) {
+        res.status(error.message === 'Course not found' ? 404 : 500).json({ message: error.message });
     }
 };

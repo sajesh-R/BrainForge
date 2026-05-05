@@ -4,7 +4,7 @@ const SmartAssistantRule = require('../../models/smart/SmartAssistantRule');
 exports.getAssistantResponse = async (req, res) => {
     try {
         const { query } = req.body;
-        const response = await SmartFeaturesService.getAssistantResponse(query);
+        const response = await SmartFeaturesService.getAssistantResponse(query, req.user._id);
         res.status(200).json({ response });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -40,7 +40,7 @@ exports.getLeaderboard = async (req, res) => {
 
 exports.checkDeadlines = async (req, res) => {
     try {
-        const reminders = await SmartFeaturesService.checkDeadlines();
+        const reminders = await SmartFeaturesService.checkDeadlines(req.user._id);
         res.status(200).json(reminders);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -53,6 +53,14 @@ exports.addAssistantRule = async (req, res) => {
         const rule = new SmartAssistantRule({ keyword, response });
         await rule.save();
         res.status(201).json(rule);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.getTaggedDocuments = async (req, res) => {
+    try {
+        const docs = await SmartFeaturesService.getRecentTaggedDocuments();
+        res.status(200).json(docs);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

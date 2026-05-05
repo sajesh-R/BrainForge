@@ -27,6 +27,11 @@ const userSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        pushSubscriptions: {
+            type: [Object],
+            default: [],
+        },
+
     },
     {
         timestamps: true, // Adds createdAt and updatedAt fields

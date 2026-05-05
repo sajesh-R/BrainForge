@@ -16,6 +16,10 @@ const courseSchema = new mongoose.Schema(
             ref: 'User',
             required: [true, 'Instructor ID is required'],
         },
+        videoUrl: {
+            type: String,
+            default: '',
+        },
     },
     {
         timestamps: true,

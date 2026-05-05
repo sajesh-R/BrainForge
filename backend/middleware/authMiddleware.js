@@ -4,10 +4,13 @@ const User = require('../models/auth/User');
 const protect = async (req, res, next) => {
     let token;
 
-    // 1. Check for token in Authorization header (Bearer <token>)
+    // 1. Check for token in Authorization header or Query string
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
         token = req.headers.authorization.split(' ')[1];
+    } else if (req.query.token) {
+        token = req.query.token;
     }
+
 
     if (!token) {
         return res.status(401).json({ message: 'Unauthorized: No token provided' });

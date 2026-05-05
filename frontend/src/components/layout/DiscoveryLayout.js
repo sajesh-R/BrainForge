@@ -16,7 +16,7 @@ const DiscoveryLayout = ({ children, onCourseCreated }) => {
     const [searchQuery, setSearchQuery] = useState('');
     // Global Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ title: '', description: '' });
+    const [formData, setFormData] = useState({ title: '', description: '', videoUrl: '' });
     const [formError, setFormError] = useState('');
     const [formSuccess, setFormSuccess] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,15 +57,14 @@ const DiscoveryLayout = ({ children, onCourseCreated }) => {
             setFormSuccess('Course created successfully!');
 
             if (onCourseCreated) onCourseCreated();
-
             setTimeout(() => {
                 setIsModalOpen(false);
-                setFormData({ title: '', description: '' });
+                setFormData({ title: '', description: '', videoUrl: '' });
                 setFormSuccess('');
+                setIsSubmitting(false);
             }, 1500);
         } catch (err) {
             setFormError(err.response?.data?.message || 'Failed to create course');
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -84,6 +83,7 @@ const DiscoveryLayout = ({ children, onCourseCreated }) => {
                         <Link to="/dashboard" className={`nav-link ${isActive('/dashboard')}`}>Dashboard</Link>
                         <Link to="/courses" className={`nav-link ${isActive('/courses')}`}>Courses</Link>
                         <Link to="/smart" className={`nav-link ${isActive('/smart')}`}>AI Hub</Link>
+                        <Link to="/chat" className={`nav-link ${isActive('/chat')}`}>Messages</Link>
                         <Link to="/reports" className={`nav-link ${isActive('/reports')}`}>Reports</Link>
                     </nav>
 
@@ -144,6 +144,17 @@ const DiscoveryLayout = ({ children, onCourseCreated }) => {
                                             className="modal-textarea"
                                             required
                                         ></textarea>
+                                    </div>
+                                    <div className="form-group" style={{ marginTop: '24px' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', fontSize: '0.85rem', color: '#111827', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Video URL (Optional)</label>
+                                        <input
+                                            type="text"
+                                            name="videoUrl"
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            value={formData.videoUrl}
+                                            onChange={handleFormChange}
+                                            className="modal-input"
+                                        />
                                     </div>
                                 </form>
                             </div>

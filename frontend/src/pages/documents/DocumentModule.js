@@ -6,6 +6,7 @@ import '../../assets/styles/documents/DocumentModule.css';
 const DocumentModule = ({ courseId }) => {
     const { user } = useAuth();
     const [documents, setDocuments] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
@@ -22,6 +23,11 @@ const DocumentModule = ({ courseId }) => {
             console.error('Error fetching documents:', error);
         }
     };
+
+    const filteredDocuments = documents.filter(doc => 
+        doc.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -57,7 +63,18 @@ const DocumentModule = ({ courseId }) => {
 
     return (
         <div className="document-module">
-            <h3>Course Documents</h3>
+            <div className="doc-module-header">
+                <h3>Course Documents</h3>
+                <div className="doc-search-wrapper">
+                    <input 
+                        type="text" 
+                        placeholder="Search by name or tag (e.g. PDF, Task)..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="doc-search-input"
+                    />
+                </div>
+            </div>
 
             {user && user.role === 'Admin' && (
                 <form className="upload-form" onSubmit={handleUpload}>
@@ -82,11 +99,11 @@ const DocumentModule = ({ courseId }) => {
             {message && <p className={`message ${message.includes('success') ? 'success' : 'error'}`}>{message}</p>}
 
             <div className="document-list">
-                {documents.length === 0 ? (
-                    <p className="no-docs">No documents uploaded for this course yet.</p>
+                {filteredDocuments.length === 0 ? (
+                    <p className="no-docs">No matching documents found.</p>
                 ) : (
                     <ul>
-                        {documents.map((doc) => (
+                        {filteredDocuments.map((doc) => (
                             <li key={doc._id} className="document-item">
                                 <div className="doc-info">
                                     <div className="doc-header">

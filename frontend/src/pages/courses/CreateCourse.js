@@ -12,11 +12,12 @@ const CreateCourse = () => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
+        videoUrl: '',
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const { title, description } = formData;
+    const { title, description, videoUrl } = formData;
 
     const onChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -87,6 +88,19 @@ const CreateCourse = () => {
                             maxLength="1000"
                             required
                         ></textarea>
+                    </div>
+
+                    <div className="form-group" style={{ marginTop: '32px' }}>
+                        <label style={{ color: '#fff', fontSize: '1rem', marginBottom: '12px', display: 'block' }}>Video URL (YouTube/Vimeo)</label>
+                        <input
+                            type="text"
+                            name="videoUrl"
+                            className="search-input"
+                            style={{ paddingLeft: '20px' }}
+                            value={videoUrl}
+                            onChange={onChange}
+                            placeholder="e.g. https://www.youtube.com/watch?v=..."
+                        />
                     </div>
 
                     <div style={{ marginTop: '48px', display: 'flex', gap: '20px' }}>

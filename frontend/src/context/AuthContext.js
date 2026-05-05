@@ -1,4 +1,6 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { subscribeToPush } from '../utils/pushConfig';
+import apiClient from '../api/apiClient';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +10,15 @@ export const AuthProvider = ({ children }) => {
         const stored = localStorage.getItem('user');
         return stored ? JSON.parse(stored) : null;
     });
+
+    useEffect(() => {
+        if (user && token) {
+            console.log('Triggering Push Subscription for:', user.email);
+            subscribeToPush(apiClient);
+        }
+    }, [user, token]);
+
+
 
     const saveAuth = (token, user) => {
         localStorage.setItem('token', token);

@@ -12,5 +12,6 @@ router.get('/reminders', protect, SmartFeaturesController.checkDeadlines);
 // Admin only routes
 router.get('/at-risk', protect, admin, SmartFeaturesController.getAtRiskUsers);
 router.post('/rules', protect, admin, SmartFeaturesController.addAssistantRule);
+router.get('/tagged-docs', protect, SmartFeaturesController.getTaggedDocuments);
 
 module.exports = router;

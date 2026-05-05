@@ -12,7 +12,7 @@ const Dashboard = () => {
     const [enrolledCourses, setEnrolledCourses] = useState([]);
     const [assignments, setAssignments] = useState([]);
     const [notifications, setNotifications] = useState([]);
-    const [messages, setMessages] = useState([]);
+
     const [timeline, setTimeline] = useState([]);
     const [showNotifs, setShowNotifs] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -20,12 +20,11 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const [coursesRes, enrolledRes, assignmentsRes, notifsRes, messagesRes, timelineRes] = await Promise.all([
+                const [coursesRes, enrolledRes, assignmentsRes, notifsRes, timelineRes] = await Promise.all([
                     dashboardApi.getCourses(),
                     dashboardApi.getEnrolledCourses(),
                     dashboardApi.getAssignments(),
                     dashboardApi.getNotifications(),
-                    dashboardApi.getRecentMessages(),
                     dashboardApi.getTimeline()
                 ]);
 
@@ -38,7 +37,7 @@ const Dashboard = () => {
                 setEnrolledCourses(enrolledRes.data.data || []);
                 setAssignments(assignmentsRes.data || []);
                 setNotifications(notifsRes.data || []);
-                setMessages(messagesRes.data || []);
+
                 setTimeline(timelineRes.data || []);
 
                 setLoading(false);
@@ -225,38 +224,7 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Recent Messages */}
-                    <div id="messages-section" className="smart-card list-card">
-                        <div className="card-header">
-                            <h3>Recent Messages</h3>
-                            <Link
-                                to={enrolledCourses.length > 0 ? `/courses/${enrolledCourses[0]._id}/chat` : '/courses'}
-                                className="btn-view-all"
-                            >
-                                Open Chat
-                            </Link>
-                        </div>
-                        <div className="data-list">
-                            {messages.length > 0 ? (
-                                messages.map(msg => (
-                                    <Link to={`/courses/${msg.course?._id}/chat`} key={msg._id} className="data-item" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                        <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '0.7rem' }}>
-                                            {msg.user?.name.charAt(0)}
-                                        </div>
-                                        <div className="item-info">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <h4 style={{ fontSize: '0.85rem' }}>{msg.user?.name} </h4>
-                                                <span className="event-time">{msg.course?.title}</span>
-                                            </div>
-                                            <p style={{ fontStyle: 'italic' }}>"{msg.content.substring(0, 40)}{msg.content.length > 40 ? '...' : ''}"</p>
-                                        </div>
-                                    </Link>
-                                ))
-                            ) : (
-                                <p className="stat-label">No recent messages.</p>
-                            )}
-                        </div>
-                    </div>
+
 
                     {/* Activity Timeline */}
                     <div className="smart-card list-card">

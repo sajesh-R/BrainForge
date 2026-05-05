@@ -1,6 +1,13 @@
 const documentService = require('../../services/document/documentService');
-const path = require('path');
-const fs = require('fs');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { s3 } = require('../../middleware/uploadMiddleware');
+const notificationController = require('../notification/notificationController');
+const courseService = require('../../services/course/courseService');
+const User = require('../../models/auth/User');
+
+
+
 
 // @desc    Upload a document
 // @route   POST /api/documents/upload
@@ -15,28 +22,48 @@ exports.uploadDocument = async (req, res) => {
         const userId = req.user?._id || req.body.userId;
 
         if (!courseId || !userId) {
-            // Delete uploaded file if validation fails
-            fs.unlinkSync(req.file.path);
             return res.status(400).json({ message: 'Course ID and User ID are required' });
         }
 
+
         const document = await documentService.saveDocumentReference({
             fileName: req.file.originalname,
-            filePath: req.file.path,
+            filePath: req.file.location, // S3 URL
             courseId,
             userId,
         });
+
+        // Notify all enrolled students
+        try {
+            const course = await courseService.fetchCourseById(courseId);
+            const enrolledUserIds = await courseService.fetchCourseEnrolledUsers(courseId);
+            
+            for (const targetUserId of enrolledUserIds) {
+                // Don't notify the person who uploaded it (the teacher)
+                if (targetUserId.toString() !== userId.toString()) {
+                    await notificationController.createNotification(
+                        targetUserId,
+                        'New Course Material',
+                        `A new document "${req.file.originalname}" has been added to ${course.title}.`,
+                        'DOCUMENT',
+                        `/courses/${courseId}`
+                    );
+
+                }
+            }
+        } catch (error) {
+            console.error('Error sending document upload notifications:', error);
+        }
 
         res.status(201).json({
             message: 'Document uploaded successfully',
             document,
         });
+
     } catch (error) {
-        if (req.file) {
-            fs.unlinkSync(req.file.path);
-        }
         res.status(500).json({ message: error.message });
     }
+
 };
 
 // @desc    Get documents by Course ID
@@ -57,14 +84,26 @@ exports.getDocumentsByCourse = async (req, res) => {
 exports.getDocumentById = async (req, res) => {
     try {
         const document = await documentService.fetchDocumentById(req.params.id);
+        
+        // Extract the key from the full S3 URL
+        // Example URL: https://bucket.s3.region.amazonaws.com/uploads/file.jpg
+        // The key is everything after the bucket domain
+        const url = new URL(document.filePath);
+        const key = url.pathname.substring(1); // Remove leading slash
 
-        const filePath = path.resolve(document.filePath);
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ message: 'File not found on server' });
-        }
+        const command = new GetObjectCommand({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: key,
+        });
 
-        res.download(filePath, document.fileName);
+        // Generate a signed URL that lasts for 1 hour (3600 seconds)
+        const signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+
+        res.redirect(signedUrl);
     } catch (error) {
+        console.error('Signed URL Error:', error);
         res.status(error.message === 'Document not found' ? 404 : 500).json({ message: error.message });
     }
 };
+
+

@@ -8,7 +8,8 @@ const {
     getSubmissionFile,
     getUserAssignments,
 } = require('../../controllers/assignment/assignmentController');
-const upload = require('../../middleware/uploadMiddleware');
+const { upload } = require('../../middleware/uploadMiddleware');
+
 const { protect } = require('../../middleware/authMiddleware');
 
 // Route for creating an assignment
