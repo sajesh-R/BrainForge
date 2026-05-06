@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { sendMessage, getUsers, startChat, getDirectMessages, getUserChats, createGroup, getUserGroups, getGroupMessages, removeUserFromGroup, deleteGroup, addGroupMember } = require('../../controllers/chat/ChatController');
+const { sendMessage, getUsers, startChat, getDirectMessages, getUserChats, createGroup, getUserGroups, getGroupMessages, removeUserFromGroup, deleteGroup, addGroupMember, markAsRead } = require('../../controllers/chat/ChatController');
 const { upload } = require('../../middleware/uploadMiddleware');
 
 const { protect } = require('../../middleware/authMiddleware');
 
 // Route for sending a message (text and/or file)
 router.post('/send', protect, upload.single('file'), sendMessage);
+
+// Route to mark messages as read
+router.put('/read', protect, markAsRead);
 
 // Group Routes
 router.post('/groups', protect, createGroup);

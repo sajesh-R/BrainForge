@@ -14,7 +14,11 @@ const ChatSessionSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    lastMessage: {
+        type: String,
+        default: ''
     }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('ChatSession', ChatSessionSchema);

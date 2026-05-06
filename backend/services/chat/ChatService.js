@@ -18,9 +18,29 @@ exports.sendMessage = async (messageData) => {
         filePath
     });
 
+    const lastMessageText = filePath ? '📎 Attachment' : content;
+
+    if (chatId) {
+        await ChatSession.findByIdAndUpdate(chatId, { lastMessage: lastMessageText, updatedAt: new Date() });
+    } else if (groupId) {
+        await ChatGroup.findByIdAndUpdate(groupId, { lastMessage: lastMessageText, updatedAt: new Date() });
+    }
+
     return await message.populate('user', 'name email');
 };
 
+
+exports.markMessagesAsRead = async (chatId, groupId, userId) => {
+    const filter = {
+        user: { $ne: userId },
+        readBy: { $ne: userId }
+    };
+    if (chatId) filter.chatSession = chatId;
+    else if (groupId) filter.group = groupId;
+    else return;
+
+    await Message.updateMany(filter, { $addToSet: { readBy: userId } });
+};
 
 exports.getDirectMessages = async (chatId) => {
     if (!chatId || chatId === 'undefined') return [];
@@ -45,9 +65,18 @@ exports.getOrCreateChatSession = async (user1Id, user2Id) => {
 };
 
 exports.getUserChats = async (userId) => {
-    return await ChatSession.find({
+    const sessions = await ChatSession.find({
         $or: [{ user1: userId }, { user2: userId }]
-    }).populate('user1', 'name email').populate('user2', 'name email');
+    }).populate('user1', 'name email').populate('user2', 'name email').sort({ updatedAt: -1 }).lean();
+    
+    for (let session of sessions) {
+        session.unreadCount = await Message.countDocuments({
+            chatSession: session._id,
+            user: { $ne: userId },
+            readBy: { $ne: userId }
+        });
+    }
+    return sessions;
 };
 
 exports.createGroup = async (name, adminId, memberIds) => {
@@ -60,9 +89,19 @@ exports.createGroup = async (name, adminId, memberIds) => {
 };
 
 exports.getUserGroups = async (userId) => {
-    return await ChatGroup.find({ members: userId })
+    const groups = await ChatGroup.find({ members: userId })
         .populate('members', 'name email')
-        .populate('admin', 'name email');
+        .populate('admin', 'name email')
+        .sort({ updatedAt: -1 }).lean();
+        
+    for (let group of groups) {
+        group.unreadCount = await Message.countDocuments({
+            group: group._id,
+            user: { $ne: userId },
+            readBy: { $ne: userId }
+        });
+    }
+    return groups;
 };
 
 exports.getGroupMessages = async (groupId) => {

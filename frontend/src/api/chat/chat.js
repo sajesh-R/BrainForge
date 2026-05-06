@@ -40,6 +40,11 @@ export const getGroupMessages = async (groupId) => {
     return response.data;
 };
 
+export const markAsRead = async (chatId, groupId) => {
+    const response = await apiClient.put('/chat/read', { chatId, groupId });
+    return response.data;
+};
+
 export const addGroupMember = async (groupId, memberIds) => {
     const response = await apiClient.post(`/chat/groups/${groupId}/members`, { memberIds });
     return response.data;

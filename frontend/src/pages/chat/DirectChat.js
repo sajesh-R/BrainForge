@@ -1,8 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getUsers, startChat, getUserChats, getDirectMessages, sendMessage, createGroup, getUserGroups, getGroupMessages, removeGroupMember, deleteGroup, addGroupMember } from '../../api/chat/chat';
+import { getUsers, startChat, getUserChats, getDirectMessages, sendMessage, createGroup, getUserGroups, getGroupMessages, removeGroupMember, deleteGroup, addGroupMember, markAsRead } from '../../api/chat/chat';
 import { useAuth } from '../../context/AuthContext';
 import DiscoveryLayout from '../../components/layout/DiscoveryLayout';
 import '../../assets/styles/chat/DirectChat.css'; // Chat layout and message styles
+
+const DoubleCheckIcon = ({ isRead }) => (
+    <svg 
+        viewBox="0 0 24 24" 
+        width="17" 
+        height="17" 
+        style={{ marginRight: '4px', verticalAlign: 'middle', marginTop: '-2px' }}
+        fill="none" 
+        stroke={isRead ? '#3b82f6' : '#94a3b8'} 
+        strokeWidth="3" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        <path d="M2 13l4 4L16 7" />
+        <path d="M8 13l4 4L22 7" />
+    </svg>
+);
 
 const DirectChat = () => {
     const [users, setUsers] = useState([]);
@@ -28,9 +45,14 @@ const DirectChat = () => {
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
-        fetchUsers();
-        fetchSessions();
-        fetchGroups();
+        const fetchAll = () => {
+            fetchUsers();
+            fetchSessions();
+            fetchGroups();
+        };
+        fetchAll();
+        const interval = setInterval(fetchAll, 5000);
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -42,13 +64,16 @@ const DirectChat = () => {
     }, [activeChat, activeChatType]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        const timer = setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 100);
+        return () => clearTimeout(timer);
     }, [messages]);
 
     const fetchUsers = async () => {
         try {
             const data = await getUsers();
-            setUsers(data);
+            if (data) setUsers(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
         } catch (error) {
             console.error('Failed to fetch users', error);
         }
@@ -57,7 +82,7 @@ const DirectChat = () => {
     const fetchSessions = async () => {
         try {
             const data = await getUserChats();
-            setSessions(data);
+            if (data) setSessions(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
         } catch (error) {
             console.error('Failed to fetch sessions', error);
         }
@@ -66,7 +91,7 @@ const DirectChat = () => {
     const fetchGroups = async () => {
         try {
             const data = await getUserGroups();
-            setGroups(data);
+            if (data) setGroups(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
         } catch (error) {
             console.error('Failed to fetch groups', error);
         }
@@ -77,10 +102,14 @@ const DirectChat = () => {
             let data;
             if (type === 'direct') {
                 data = await getDirectMessages(chatId);
+                await markAsRead(chatId, null);
             } else if (type === 'group') {
                 data = await getGroupMessages(chatId);
+                await markAsRead(null, chatId);
             }
-            if (data) setMessages(data);
+            if (data) {
+                setMessages(prev => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
+            }
         } catch (error) {
             console.error('Failed to fetch messages', error);
         }
@@ -210,8 +239,19 @@ const DirectChat = () => {
     };
 
     const formatTime = (dateString) => {
+        if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            return 'Yesterday';
+        } else {
+            return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        }
     };
 
     const getChatPartner = (session) => {
@@ -235,27 +275,6 @@ const DirectChat = () => {
                         </button>
                     </div>
                     
-                    {groups.length > 0 && (
-                        <div className="sidebar-section">
-                            <h4>Your Groups</h4>
-                            <div className="user-list">
-                                {groups.map(group => (
-                                    <div 
-                                        key={group._id} 
-                                        className={`user-card ${activeChat?._id === group._id && activeChatType === 'group' ? 'active' : ''}`}
-                                        onClick={() => handleSelectChat(group, 'group')}
-                                    >
-                                        <div className="avatar" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6)' }}>{group.name?.charAt(0) || 'G'}</div>
-                                        <div className="user-info">
-                                            <span className="name">{group.name}</span>
-                                            <span className="role">{group.members?.length} members</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
                     <div className="sidebar-section">
                         <h4>Recent Chats</h4>
                         <div className="user-list">
@@ -268,8 +287,23 @@ const DirectChat = () => {
                                         onClick={() => handleSelectChat(session, 'direct')}
                                     >
                                         <div className="avatar">{partner.name?.charAt(0) || '?'}</div>
-                                        <div className="user-info">
-                                            <span className="name">{partner.name}</span>
+                                        <div className="user-info" style={{ width: '100%', overflow: 'hidden' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span className="name">{partner.name}</span>
+                                                {session.updatedAt && <span style={{ fontSize: '0.75rem', color: session.unreadCount > 0 ? '#A855F7' : '#94a3b8', fontWeight: session.unreadCount > 0 ? '600' : 'normal' }}>{formatTime(session.updatedAt)}</span>}
+                                            </div>
+                                            {session.lastMessage && (
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                                    <span style={{ fontSize: '0.85rem', color: session.unreadCount > 0 ? '#111827' : '#64748b', fontWeight: session.unreadCount > 0 ? '600' : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: session.unreadCount > 0 ? '85%' : '100%' }}>
+                                                        <><DoubleCheckIcon isRead={false} />{session.lastMessage}</>
+                                                    </span>
+                                                    {session.unreadCount > 0 && (
+                                                        <span style={{ background: '#A855F7', color: '#fff', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '10px', minWidth: '20px', textAlign: 'center' }}>
+                                                            {session.unreadCount}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -291,6 +325,39 @@ const DirectChat = () => {
                             ))}
                         </div>
                     </div>
+
+                    {groups.length > 0 && (
+                        <div className="sidebar-section">
+                            <h4>Your Groups</h4>
+                            <div className="user-list">
+                                {groups.map(group => (
+                                    <div 
+                                        key={group._id} 
+                                        className={`user-card ${activeChat?._id === group._id && activeChatType === 'group' ? 'active' : ''}`}
+                                        onClick={() => handleSelectChat(group, 'group')}
+                                    >
+                                        <div className="avatar" style={{ background: 'linear-gradient(135deg, #10b981, #3b82f6)' }}>{group.name?.charAt(0) || 'G'}</div>
+                                        <div className="user-info" style={{ width: '100%', overflow: 'hidden' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span className="name">{group.name}</span>
+                                                {group.updatedAt && <span style={{ fontSize: '0.75rem', color: group.unreadCount > 0 ? '#A855F7' : '#94a3b8', fontWeight: group.unreadCount > 0 ? '600' : 'normal' }}>{formatTime(group.updatedAt)}</span>}
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                                <span style={{ fontSize: '0.85rem', color: group.unreadCount > 0 ? '#111827' : '#64748b', fontWeight: group.unreadCount > 0 ? '600' : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: group.unreadCount > 0 ? '85%' : '100%' }}>
+                                                    {group.lastMessage ? <><DoubleCheckIcon isRead={false} />{group.lastMessage}</> : `${group.members?.length} members`}
+                                                </span>
+                                                {group.unreadCount > 0 && (
+                                                    <span style={{ background: '#A855F7', color: '#fff', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '10px', minWidth: '20px', textAlign: 'center' }}>
+                                                        {group.unreadCount}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="chat-main-area">
@@ -334,6 +401,7 @@ const DirectChat = () => {
                                         const msgUserId = String(msg.user?._id || msg.user?.id || msg.user);
                                         const currentUserId = String(user?._id || user?.id);
                                         const isSent = msgUserId === currentUserId;
+                                        const isRead = isSent && msg.readBy && msg.readBy.length > 0;
                                         return (
                                             <div key={msg._id} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
                                                 <div className="chat-avatar">{msg.user?.name?.charAt(0) || '?'}</div>
@@ -350,7 +418,12 @@ const DirectChat = () => {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="message-time-stamp">{formatTime(msg.createdAt)}</div>
+                                                    <div className="message-time-stamp">
+                                                        {formatTime(msg.createdAt)}
+                                                        {isSent && (
+                                                            <span style={{ marginLeft: '6px' }}><DoubleCheckIcon isRead={isRead} /></span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
@@ -385,9 +458,22 @@ const DirectChat = () => {
                         </>
                     ) : (
                         <div className="no-chat-selected">
-                            <div className="empty-icon">👋</div>
-                            <h2>Select a user or group to start chatting</h2>
-                            <p>Connect with your peers and instructors instantly.</p>
+                            <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: '30px' }}>
+                                <div style={{
+                                    width: '130px', height: '130px', borderRadius: '50%',
+                                    background: 'linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: 'inset 0 4px 10px rgba(255,255,255,1), 0 20px 40px rgba(15, 23, 42, 0.08)'
+                                }}>
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(-15deg) translateX(-4px) translateY(4px)', filter: 'drop-shadow(8px 16px 20px rgba(15, 23, 42, 0.15))' }}>
+                                        <path d="M22 2L15 22L11 13L22 2Z" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round"/>
+                                        <path d="M22 2L11 13L2 9L22 2Z" fill="#ffffff" stroke="#0f172a" strokeWidth="1.5" strokeLinejoin="round"/>
+                                        <path d="M22 2L11 13" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <h2>Engage with your Learning Community</h2>
+                            <p>Choose a peer or instructor to share insights, ask questions, and grow together.</p>
                         </div>
                     )}
                 </div>
@@ -417,13 +503,19 @@ const DirectChat = () => {
                                             <div key={u._id || u.id} 
                                                  onClick={() => toggleMemberSelection(u._id || u.id)}
                                                  style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', cursor: 'pointer', padding: '8px', background: selectedMembers.includes(u._id || u.id) ? 'rgba(168, 85, 247, 0.1)' : 'transparent', borderRadius: '8px' }}>
-                                                <input 
-                                                    type="checkbox" 
-                                                    id={`user-${u._id || u.id}`}
-                                                    checked={selectedMembers.includes(u._id || u.id)}
-                                                    onChange={() => {}} // handled by div
-                                                    style={{ width: 'auto', margin: 0, cursor: 'pointer', transform: 'scale(1.2)', pointerEvents: 'none' }}
-                                                />
+                                                <div style={{
+                                                    width: '24px', height: '24px', borderRadius: '6px', flexShrink: 0,
+                                                    border: selectedMembers.includes(u._id || u.id) ? 'none' : '2px solid #e5e7eb',
+                                                    background: selectedMembers.includes(u._id || u.id) ? 'linear-gradient(135deg, #A855F7 0%, #EC4899 100%)' : '#fff',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
+                                                    boxShadow: selectedMembers.includes(u._id || u.id) ? '0 4px 10px rgba(168, 85, 247, 0.3)' : 'none'
+                                                }}>
+                                                    {selectedMembers.includes(u._id || u.id) && (
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                                        </svg>
+                                                    )}
+                                                </div>
                                                 <label style={{ cursor: 'pointer', color: '#374151', margin: 0 }}>{u.name}</label>
                                             </div>
                                         ))}
@@ -457,13 +549,19 @@ const DirectChat = () => {
                                             <div key={u._id || u.id} 
                                                  onClick={() => toggleAddMemberSelection(u._id || u.id)}
                                                  style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', cursor: 'pointer', padding: '8px', background: addSelectedMembers.includes(u._id || u.id) ? 'rgba(168, 85, 247, 0.1)' : 'transparent', borderRadius: '8px' }}>
-                                                <input 
-                                                    type="checkbox" 
-                                                    id={`add-user-${u._id || u.id}`}
-                                                    checked={addSelectedMembers.includes(u._id || u.id)}
-                                                    onChange={() => {}} // handled by div
-                                                    style={{ width: 'auto', margin: 0, cursor: 'pointer', transform: 'scale(1.2)', pointerEvents: 'none' }}
-                                                />
+                                                <div style={{
+                                                    width: '24px', height: '24px', borderRadius: '6px', flexShrink: 0,
+                                                    border: addSelectedMembers.includes(u._id || u.id) ? 'none' : '2px solid #e5e7eb',
+                                                    background: addSelectedMembers.includes(u._id || u.id) ? 'linear-gradient(135deg, #A855F7 0%, #EC4899 100%)' : '#fff',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
+                                                    boxShadow: addSelectedMembers.includes(u._id || u.id) ? '0 4px 10px rgba(168, 85, 247, 0.3)' : 'none'
+                                                }}>
+                                                    {addSelectedMembers.includes(u._id || u.id) && (
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                                        </svg>
+                                                    )}
+                                                </div>
                                                 <label style={{ cursor: 'pointer', color: '#374151', margin: 0 }}>{u.name}</label>
                                             </div>
                                         ))}

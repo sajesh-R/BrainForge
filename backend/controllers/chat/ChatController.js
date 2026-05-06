@@ -86,6 +86,16 @@ exports.startChat = async (req, res) => {
     }
 };
 
+exports.markAsRead = async (req, res) => {
+    try {
+        const { chatId, groupId } = req.body;
+        await chatService.markMessagesAsRead(chatId, groupId, req.user._id);
+        res.status(200).json({ message: 'Messages marked as read' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 exports.getDirectMessages = async (req, res) => {
     try {
         const { chatId } = req.params;

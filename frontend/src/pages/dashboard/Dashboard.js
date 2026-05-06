@@ -199,30 +199,7 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Notifications List */}
-                    <div className="smart-card list-card">
-                        <div className="card-header">
-                            <h3>System Notifications</h3>
-                        </div>
-                        <div className="data-list">
-                            {notifications.length > 0 ? (
-                                notifications.map(n => (
-                                    <div key={n._id} className={`data-item ${!n.isRead ? 'unread-bg' : ''}`} onClick={() => handleMarkRead(n._id)}>
-                                        <div className="item-icon" style={{ background: n.type === 'SUCCESS' ? '#DCFCE7' : '#F3E8FF' }}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                                        </div>
-                                        <div className="item-info">
-                                            <h4>{n.title}</h4>
-                                            <p>{n.message}</p>
-                                            <span className="event-time">{new Date(n.createdAt).toLocaleDateString()}</span>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="stat-label">No notifications yet.</p>
-                            )}
-                        </div>
-                    </div>
+
 
 
 
